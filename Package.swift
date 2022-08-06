@@ -27,6 +27,7 @@ let package = Package(
                 "LIS3DH",
                 "LTR390",
                 "MAG3110",
+                "MAX6675",
                 "MCP4725",
                 "MCP9808",
                 "MLX90393",
@@ -59,6 +60,7 @@ let package = Package(
         .library(name: "LCD1602", targets: ["LCD1602"]),
         .library(name: "LIS3DH", targets: ["LIS3DH"]),
         .library(name: "LTR390", targets: ["LTR390"]),
+        .library(name: "MAX6675", targets: ["MAC6675"]),
         .library(name: "MAG3110", targets: ["MAG3110"]),
         .library(name: "MCP4725", targets: ["MCP4725"]),
         .library(name: "MCP9808", targets: ["MCP9808"]),
@@ -137,6 +139,9 @@ let package = Package(
             name: "LTR390",
             dependencies: ["SwiftIO",
                            .product(name: "RealModule", package: "swift-numerics")]),
+        .target(
+            name: "MAX6675",
+            dependencies: ["SwiftIO"]),
         .target(
             name: "MAG3110",
             dependencies: ["SwiftIO",
