@@ -1,16 +1,21 @@
-// Read temperature and humidity every 2 seconds.
+// Read temperature every 2 seconds.
 import SwiftIO
-import MadBoard
-import DHTxx
+import SwiftIOBoard
 
-let pin = DigitalInOut(Id.D0)
-let sensor = DHTxx(pin)
 
-while true {
-    let values = sensor.read()
-    if let values = values {
-        print("Temperature: \(values.1)")
-        print("Humidity: \(values.0)")
-    }
-    sleep(ms: 2000)
+let spiId       = Id.SPI1
+
+let sckId: Id   = Id.D14
+let csId: Id    = Id.D17
+let soId: Id    = Id.D16
+let speed = 1_000
+
+//let spi = SPIPin(sck: DigitalOut(sckId), cs: DigitalOut(csId), so: DigitalIn(soId))
+let spi = SPI(spiId,csPin: DigitalOut(csId))
+let max6675 = MAX6675(spi: spi)
+
+
+while(true){
+    sleep(ms: 2_000)
+    print(max6675.readCelsius() ?? "fail")
 }

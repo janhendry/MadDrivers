@@ -10,10 +10,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-class MAX6675{
+public final class MAX6675{
     let spi_i: SPI_I
   
-    init(spi:SPI_I){
+    public init(spi:SPI_I){
         spi_i = spi
         if(spi_i.getSpeed() > 10_000_000){
             spi_i.setSpeed(10_000_000)
@@ -24,7 +24,7 @@ class MAX6675{
         Reads a temperature from the thermocouple.
         @return temperature in degree Celsius
     */
-    func readCelsius() -> Double?{
+    public func readCelsius() -> Double?{
         let data: UInt16 = spi_i.read(count: 1)[0]
         
         if ((data & 0b100) != 0) {
@@ -38,7 +38,7 @@ class MAX6675{
         Reads a temperature in Kelvin.
         @return temperature in degree Kelvin
     */
-    func readKelvin() -> Double?{
+    public func readKelvin() -> Double?{
         if let celcius = readCelsius(){
             return Temperature.toKelvins(celsius:celcius)
         }
@@ -50,7 +50,7 @@ class MAX6675{
         @return temperature in degree Fahrenheit
     */
 
-    func readFahrenheit() -> Double?{
+    public func readFahrenheit() -> Double?{
         if let celcius = readCelsius(){
             return Temperature.toFahrenheit(celsius:celcius)
         }
