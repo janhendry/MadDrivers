@@ -1,9 +1,14 @@
+//=== ADT7410.swift -------------------------------------------------------===//
 //
-//  File 2.swift
-//  
+// Copyright (c) MadMachine Limited
+// Licensed under MIT License
 //
-//  Created by Jan Anstipp on 07.09.22.
+// Authors: Jan Anstipp
+// Created: 16/09/2022
 //
+// See https://madmachine.io for more information
+//
+//===----------------------------------------------------------------------===//
 
 import SwiftIO
 
@@ -18,69 +23,102 @@ public class ADT7410{
         self.serialBusAddress = serialBusAddress
     }
     
-    // return Temp in Celcius
+    /**
+     Read the temperature from the sensor.
+     */
     func readCelcius() -> Double{
         toTemp(read(.TEMP_MSB,2))
     }
     
-    func readStatus() -> UInt8{
-        read(.STATUS)
+    /**
+     Read the status from the sensor.
+     */
+    func readStatus() -> Status{
+        Status(read(.STATUS))
     }
     
-    func readId() -> UInt8{
-        read(.ID)
+    /**
+     Read the config from the sensor.
+     */
+    func readConfig() -> Configuration{
+        Configuration(read(.CONFIG))
     }
     
+    /**
+     Read the 8-bit id Register. The manufacturer ID in Bit 3 to Bit 7 and the silicon revision in Bit 0 to Bit 2.
+     */
+    func readId() -> ChipID{
+        ChipID(read(.ID))
+    }
+    
+    /**
+     Write the operation mode in the configuration register.
+     */
     func set0perationMode(_ mode: OperationMode){
         configuration.operationMode = mode
-        write([configuration.getConfigByte()], to: .CONFIG)
+        write([configuration.getByte()], to: .CONFIG)
     }
     
+    /**
+     Write the number of faults in the configuration register.
+     */
     func setNumberOfFaults(_ numberOfFaults: NumberOfFaults) {
         configuration.numberOfFaults = numberOfFaults
-        write([configuration.getConfigByte()],to: .CONFIG)
+        write([configuration.getByte()],to: .CONFIG)
     }
 
+    /**
+     Write the CT output polarity in the configuration register.
+     */
     func setCTOutputPolarity(_ ctOutputPolarity: CTOutputPolarity){
         configuration.ctOutputPolarity = ctOutputPolarity
-        write([configuration.getConfigByte()],to: .CONFIG)
+        write([configuration.getByte()],to: .CONFIG)
     }
     
+    /**
+     Write the INT output polarity in the configuration register.
+     */
     func setINTOutputPolarity(_ intOutputPolarity: INTOutputPolarity){
         configuration.intOutputPolarity = intOutputPolarity
-        write([configuration.getConfigByte()],to: .CONFIG)
+        write([configuration.getByte()],to: .CONFIG)
     }
     
+    /**
+     Write the temperature detection mode in the configuration register.
+     */
     func setTemperatureDetectionMode(_ temperatureDetectionMode: TemperatureDetectionMode){
         configuration.temperatureDetectionMode = temperatureDetectionMode
-        write([configuration.getConfigByte()],to: .CONFIG)
-    }
-    /**
-     Default temp hight  64°C
-     */
-    func setSetPointHight(tempature: Double){
-        write(toData(tempature), to: .SETPOINT_TEMP_HIGH_MSB)
+        write([configuration.getByte()],to: .CONFIG)
     }
     
     /**
-     Default temp low  10°C
+     Write the temparture range for the INT pin. If the temperature falls below the min value or rises above the max value, the INT pin is triggered. Default temperature range is 10°C to 64°C.
      */
-    func setSetPointLow(tempature: Double){
-        write(toData(tempature), to: .SETPOINT_TEMP_LOW_MSB)
+    func setIntTemperatureRange(min minTemp: Double, max maxTemp: Double ){
+        write(toData(minTemp), to: .SETPOINT_TEMP_LOW_MSB)
+        write(toData(maxTemp), to: .SETPOINT_TEMP_HIGH_MSB)
     }
 
     /**
-     Default temp crit  147°C
+     Write the critical temparture for the CT pin. If the temperature rises above the value, the CT pin is triggered. Default critical temparture is 147°C.
      */
-    func setSetpointCritical(tempature: Double){
+    func setCTCriticalTemperature(tempature: Double){
         write(toData(tempature), to: .SETPOINT_TEMP_CRIT_MSB)
     }
 
     /**
-     Default temp hyst 5°C
+     Write the temperature hysteresis value for the THIGH, TLOW, and TCRIT temperature limits. The value is subtracted from the THIGH and TCRIT values and added to the TLOW value to implement hysteresis.  Default temperature hyst is 5°C.
      */
-    func setSetpointHyst(tempature: Double){
+    func setHyst(tempature: Double){
         write(toData(tempature), to: .SETPOINT_TEMP_CRIT_MSB)
+    }
+    
+    /**
+     Write the configuration to the sensor.
+     */
+    func setConfig(_ configuration: Configuration) {
+        write([configuration.getByte()], to: .CONFIG)
+        self.configuration = configuration
     }
     
     /**
@@ -89,15 +127,6 @@ public class ADT7410{
     func reset(){
         write([], to: .RESET)
         sleep(ms: 1) // TODO sleep for 200 μs
-    }
-    
-    func readConfig() -> Configuration{
-        Configuration(read(.CONFIG))
-    }
-    
-    func setConfig(_ configuration: Configuration) {
-        write([configuration.getConfigByte()], to: .CONFIG)
-        self.configuration = configuration
     }
 }
 
@@ -158,7 +187,37 @@ extension ADT7410 {
         case SETPOINT_TEMP_CRIT_MSB = 0x08
         case SETPOINT_TEMP_CRIT_TSB = 0x09
         case SETPOINT_TEMP_HYST     = 0x0A
-        case ID                     = 0x0B  /// Manufacturer identification
+        case ID                     = 0x0B
         case RESET                  = 0x2F
+    }
+    
+    /**
+     Manufacturer ID in Bit 3 to Bit 7 and the silicon revision in Bit 0 to Bit 2.
+     */
+    class ChipID{
+        let manufacturerID: UInt8
+        let revision: UInt8
+    
+        init(_ byte: UInt8){
+            manufacturerID = byte >> 3
+            revision = byte & 0b111
+        }
+    }
+    
+    /**
+     Status of the overtemperaure and undertemperature interrupts. It also reflects the status of a temperature conversion operation.
+     */
+    class Status{
+        let isTLowInterrupt: Bool
+        let isTHightInterrupt: Bool
+        let isTCritInterrupt: Bool
+        let isWriteTemperaure: Bool
+        
+        init(_ byte: UInt8){
+            isTLowInterrupt = byte.isBitSet(4)
+            isTHightInterrupt = byte.isBitSet(5)
+            isTCritInterrupt = byte.isBitSet(6)
+            isWriteTemperaure = byte.isBitSet(7)
+        }
     }
 }
