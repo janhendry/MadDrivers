@@ -87,6 +87,9 @@ let package = Package(
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
+            name: "ADT7410",
+            dependencies: ["SwiftIO"]),
+        .target(
             name: "ADXL345",
             dependencies: ["SwiftIO"]),
         .target(
@@ -191,7 +194,9 @@ let package = Package(
         .target(
             name: "VL53L0x",
             dependencies: ["SwiftIO"]),
-
+        .testTarget(
+            name: "ADT7410Tests",
+            dependencies: ["ADT7410", "SwiftIO"]),
         .testTarget(
             name: "ADXL345Tests",
             dependencies: ["ADXL345", "SwiftIO"]),

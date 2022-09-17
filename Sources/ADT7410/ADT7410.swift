@@ -18,7 +18,7 @@ public class ADT7410{
     private let serialBusAddress: SerialBusAddress
     lazy private var configuration: Configuration = readConfig()
     
-    init(_ ic2: I2C,_ serialBusAddress: SerialBusAddress = ._00){
+    public init(_ ic2: I2C,_ serialBusAddress: SerialBusAddress = ._00){
         self.i2c = ic2
         self.serialBusAddress = serialBusAddress
     }
@@ -26,35 +26,56 @@ public class ADT7410{
     /**
      Read the temperature from the sensor.
      */
-    func readCelcius() -> Double{
+    public func readCelcius() -> Double{
         toTemp(read(.TEMP_MSB,2))
     }
     
     /**
      Read the status from the sensor.
      */
-    func readStatus() -> Status{
+    public func readStatus() -> Status{
         Status(read(.STATUS))
+    }
+    
+    /**
+     Read the temparture range for the INT pin. If the temperature falls below the min value or rises above the max value, the INT pin is triggered. Default temperature range is 10°C to 64°C.
+     */
+    public func readIntTemperatureRange() -> (minTemp: Double,maxTemp: Double) {
+        (toTemp(read(.SETPOINT_TEMP_LOW_MSB,2)), toTemp(read(.SETPOINT_TEMP_HIGH_MSB,2)))
+    }
+
+    /**
+     Write the critical temparture for the CT pin. If the temperature rises above the value, the CT pin is triggered. Default critical temparture is 147°C.
+     */
+    public func readCTCriticalTemperature() -> Double{
+        toTemp(read(.SETPOINT_TEMP_CRIT_MSB,2))
+    }
+
+    /**
+     Write the temperature hysteresis value for the THIGH, TLOW, and TCRIT temperature limits. The value is subtracted from the THIGH and TCRIT values and added to the TLOW value to implement hysteresis.  Default temperature hyst is 5°C.
+     */
+    public func readHyst() -> UInt8{
+        read(.SETPOINT_TEMP_HYST)
     }
     
     /**
      Read the config from the sensor.
      */
-    func readConfig() -> Configuration{
+    public func readConfig() -> Configuration{
         Configuration(read(.CONFIG))
     }
     
     /**
      Read the 8-bit id Register. The manufacturer ID in Bit 3 to Bit 7 and the silicon revision in Bit 0 to Bit 2.
      */
-    func readId() -> ChipID{
+    public func readId() -> ChipID{
         ChipID(read(.ID))
     }
     
     /**
      Write the operation mode in the configuration register.
      */
-    func set0perationMode(_ mode: OperationMode){
+    public func set0perationMode(_ mode: OperationMode){
         configuration.operationMode = mode
         write([configuration.getByte()], to: .CONFIG)
     }
@@ -62,7 +83,7 @@ public class ADT7410{
     /**
      Write the number of faults in the configuration register.
      */
-    func setNumberOfFaults(_ numberOfFaults: NumberOfFaults) {
+    public func setNumberOfFaults(_ numberOfFaults: NumberOfFaults) {
         configuration.numberOfFaults = numberOfFaults
         write([configuration.getByte()],to: .CONFIG)
     }
@@ -70,7 +91,7 @@ public class ADT7410{
     /**
      Write the CT output polarity in the configuration register.
      */
-    func setCTOutputPolarity(_ ctOutputPolarity: CTOutputPolarity){
+    public func setCTOutputPolarity(_ ctOutputPolarity: CTOutputPolarity){
         configuration.ctOutputPolarity = ctOutputPolarity
         write([configuration.getByte()],to: .CONFIG)
     }
@@ -78,7 +99,7 @@ public class ADT7410{
     /**
      Write the INT output polarity in the configuration register.
      */
-    func setINTOutputPolarity(_ intOutputPolarity: INTOutputPolarity){
+    public func setINTOutputPolarity(_ intOutputPolarity: INTOutputPolarity){
         configuration.intOutputPolarity = intOutputPolarity
         write([configuration.getByte()],to: .CONFIG)
     }
@@ -86,7 +107,7 @@ public class ADT7410{
     /**
      Write the temperature detection mode in the configuration register.
      */
-    func setTemperatureDetectionMode(_ temperatureDetectionMode: TemperatureDetectionMode){
+    public func setTemperatureDetectionMode(_ temperatureDetectionMode: TemperatureDetectionMode){
         configuration.temperatureDetectionMode = temperatureDetectionMode
         write([configuration.getByte()],to: .CONFIG)
     }
@@ -94,7 +115,7 @@ public class ADT7410{
     /**
      Write the temparture range for the INT pin. If the temperature falls below the min value or rises above the max value, the INT pin is triggered. Default temperature range is 10°C to 64°C.
      */
-    func setIntTemperatureRange(min minTemp: Double, max maxTemp: Double ){
+    public func setIntTemperatureRange(min minTemp: Double, max maxTemp: Double ){
         write(toData(minTemp), to: .SETPOINT_TEMP_LOW_MSB)
         write(toData(maxTemp), to: .SETPOINT_TEMP_HIGH_MSB)
     }
@@ -102,21 +123,21 @@ public class ADT7410{
     /**
      Write the critical temparture for the CT pin. If the temperature rises above the value, the CT pin is triggered. Default critical temparture is 147°C.
      */
-    func setCTCriticalTemperature(tempature: Double){
+    public func setCTCriticalTemperature(tempature: Double){
         write(toData(tempature), to: .SETPOINT_TEMP_CRIT_MSB)
     }
 
     /**
-     Write the temperature hysteresis value for the THIGH, TLOW, and TCRIT temperature limits. The value is subtracted from the THIGH and TCRIT values and added to the TLOW value to implement hysteresis.  Default temperature hyst is 5°C.
+     Write the temperature hysteresis value for the THIGH, TLOW, and TCRIT temperature limits. The value is subtracted from the THIGH and TCRIT values and added to the TLOW value to implement hysteresis. allowed values are from 0°C-15°C and default temperature hyst is 5°C.
      */
-    func setHyst(tempature: Double){
-        write(toData(tempature), to: .SETPOINT_TEMP_CRIT_MSB)
+    public func setHyst(tempature: UInt8){
+        write([tempature], to: .SETPOINT_TEMP_HYST)
     }
     
     /**
      Write the configuration to the sensor.
      */
-    func setConfig(_ configuration: Configuration) {
+    public func setConfig(_ configuration: Configuration) {
         write([configuration.getByte()], to: .CONFIG)
         self.configuration = configuration
     }
@@ -124,7 +145,7 @@ public class ADT7410{
     /**
      Reset the settings to the default values. Will not reset the entire I2C bus.The ADT7410 does not respond to the I2C bus commands (do not acknowledge) during the default values upload for approximately 200 μs.
      */
-    func reset(){
+    public func reset(){
         write([], to: .RESET)
         sleep(ms: 1) // TODO sleep for 200 μs
     }
@@ -132,20 +153,20 @@ public class ADT7410{
 
 extension ADT7410 {
 
-    private func read(_ registerAddresse: RegisterAddress) -> UInt8{
+    func read(_ registerAddresse: RegisterAddress) -> UInt8{
         read(registerAddresse,1)[0]
     }
     
-    private func read(_ registerAddresse: RegisterAddress,_ registerSize: Int) -> [UInt8]{
+    func read(_ registerAddresse: RegisterAddress,_ registerSize: Int) -> [UInt8]{
         i2c.writeRead(registerAddresse.rawValue, readCount: registerSize, address: serialBusAddress.rawValue)
     }
     
-    private func write(_ data: [UInt8],to registerAddresse: RegisterAddress) {
-        i2c.write(data, to: registerAddresse.rawValue)
+    func write(_ data: [UInt8],to registerAddresse: RegisterAddress) {
+        i2c.write([registerAddresse.rawValue]+data, to: serialBusAddress.rawValue)
     }
     
-    private func toTemp(_ data: [UInt8]) -> Double{
-        let dataInt16 = data.withUnsafeBytes { $0.load(as: Int16.self) }
+    func toTemp(_ data: [UInt8]) -> Double{
+        let dataInt16 = (Int16(data[0]) << 8) | Int16(data[1])
         let isPositiveTemp = dataInt16 >= 0
         
         switch(configuration.resulution, isPositiveTemp){
@@ -155,7 +176,7 @@ extension ADT7410 {
         }
     }
 
-    private func toData(_ temp: Double) -> [UInt8]{
+    func toData(_ temp: Double) -> [UInt8]{
         let isPositiveTemp = temp >= 0
         var data:Int16 = 0
         
@@ -168,14 +189,14 @@ extension ADT7410 {
         return [UInt8(data >> 8), UInt8(data & 0x00ff)]
     }
     
-    enum SerialBusAddress: UInt8{
-        case _00 = 0b10010000
-        case _01 = 0b10010010
-        case _10 = 0b10010100
-        case _11 = 0b10010110
+    public enum SerialBusAddress: UInt8{
+        case _00 = 0x48
+        case _01 = 0x49
+        case _10 = 0x4A
+        case _11 = 0x4B
     }
 
-    enum RegisterAddress: UInt8{
+    public enum RegisterAddress: UInt8{
         case TEMP_MSB               = 0x00
         case TEMP_LSB               = 0x01
         case STATUS                 = 0x02
@@ -194,7 +215,7 @@ extension ADT7410 {
     /**
      Manufacturer ID in Bit 3 to Bit 7 and the silicon revision in Bit 0 to Bit 2.
      */
-    class ChipID{
+    public struct ChipID{
         let manufacturerID: UInt8
         let revision: UInt8
     
@@ -207,7 +228,7 @@ extension ADT7410 {
     /**
      Status of the overtemperaure and undertemperature interrupts. It also reflects the status of a temperature conversion operation.
      */
-    class Status{
+    public struct Status{
         let isTLowInterrupt: Bool
         let isTHightInterrupt: Bool
         let isTCritInterrupt: Bool

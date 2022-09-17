@@ -14,7 +14,7 @@ import SwiftIO
 
 public extension ADT7410 {
     
-    struct Configuration{
+    struct Configuration: Equatable{
     
         var numberOfFaults: NumberOfFaults = .ONE
         var ctOutputPolarity: CTOutputPolarity = .ACTIVE_LOW
