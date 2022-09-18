@@ -158,7 +158,7 @@ public class ADT7410{
     /// Will not reset the entire I2C bus.The ADT7410 does not respond to the I2C bus commands (do not acknowledge) during the default values upload for approximately 200 μs.
     public func reset(){
         write([], to: .RESET)
-        sleep(ms: 1) // TODO sleep for 200 μs
+        wait(us: 200)
     }
 }
 

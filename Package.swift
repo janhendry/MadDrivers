@@ -10,6 +10,7 @@ let package = Package(
         .library(
             name: "MadDrivers",
             targets: [
+                "ADT7410",
                 "ADXL345",
                 "AHTx0",
                 "AMG88xx",
@@ -43,6 +44,7 @@ let package = Package(
                 "VEML6070",
                 "VEML7700",
                 "VL53L0x"]),
+        .library(name: "ADT7410", targets: ["ADT7410"]),
         .library(name: "ADXL345", targets: ["ADXL345"]),
         .library(name: "AHTx0", targets: ["AHTx0"]),
         .library(name: "AMG88xx", targets: ["AMG88xx"]),
@@ -80,7 +82,7 @@ let package = Package(
     dependencies: [
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
-        .package(url: "https://github.com/madmachineio/SwiftIO.git", .branch("mock")),
+        .package(url: "https://github.com/madmachineio/SwiftIO.git", .branch("main")),
         .package(url: "https://github.com/apple/swift-numerics", from: "1.0.0"),
     ],
     targets: [
