@@ -169,8 +169,8 @@ extension ADT7410 {
     }
     
     func read(_ registerAddresse: RegisterAddress,_ registerSize: Int) -> [UInt8]{
-        var buffer: [UInt8] = []
-        i2c.writeRead(registerAddresse.rawValue, into: &buffer, readCount: registerSize, address: serialBusAddress.rawValue)
+        var buffer: [UInt8] = [UInt8](repeating: 0, count: registerSize)
+        i2c.writeRead(registerAddresse.rawValue, into: &buffer, address: serialBusAddress.rawValue)
         return buffer
     }
     
