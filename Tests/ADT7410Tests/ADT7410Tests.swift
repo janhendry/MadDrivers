@@ -18,6 +18,20 @@ final class ADT7410Tests: XCTestCase {
         XCTAssertEqual(125,ADT7410.toTemp(resulution, [0b0011_1110,0b1000_0000]))
         XCTAssertEqual(150,ADT7410.toTemp(resulution, [0b0100_1011,0b0000_0000]))
     }
+    
+    func testToData13Bit(){
+        let resulution = ADT7410.Resulution.r_13Bit
+        XCTAssertEqual([0b1110_0100,0b1000_0000],ADT7410.toData(resulution,-55))
+        XCTAssertEqual([0b1110_0111,0b0000_0000],ADT7410.toData(resulution,-50))
+        XCTAssertEqual([0b1111_0011,0b1000_0000],ADT7410.toData(resulution,-25))
+        XCTAssertEqual([0b1111_1111,0b1111_1000],ADT7410.toData(resulution,-0.0625))
+        XCTAssertEqual([0b0000_0000,0b0000_0000],ADT7410.toData(resulution,0))
+        XCTAssertEqual([0b0000_0000,0b0000_1000],ADT7410.toData(resulution,0.0625))
+        XCTAssertEqual([0b0000_1100,0b1000_0000],ADT7410.toData(resulution,25))
+        XCTAssertEqual([0b0001_1001,0b0000_0000],ADT7410.toData(resulution,50))
+        XCTAssertEqual([0b0011_1110,0b1000_0000],ADT7410.toData(resulution,125))
+        XCTAssertEqual([0b0100_1011,0b0000_0000],ADT7410.toData(resulution,150))
+    }
         
     func testDefaultConfiguration(){
         let config = ADT7410.Configuration()

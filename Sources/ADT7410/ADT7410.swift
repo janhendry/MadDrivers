@@ -199,7 +199,8 @@ extension ADT7410 {
         case (.r_16Bit,_): data = Int16(temp * 128.0)
         }
         
-        return [UInt8(data >> 8), UInt8(data & 0x00ff)]
+        let uIntData = UInt16(bitPattern: data)
+        return [UInt8( uIntData >> 8), UInt8(uIntData & 0x00ff) ]
     }
     
     /// Serial bus address of the ADT7410
