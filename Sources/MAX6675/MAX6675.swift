@@ -10,52 +10,49 @@
 //
 //===----------------------------------------------------------------------===//
 
-class MAX6675{
-    let spi_i: SPI_I
-  
-    init(spi:SPI_I){
-        spi_i = spi
-        if(spi_i.getSpeed() > 10_000_000){
-            spi_i.setSpeed(10_000_000)
-        }
-    }
+import SwiftIO
 
-    /**
-        Reads a temperature from the thermocouple.
-        @return temperature in degree Celsius
-    */
-    func readCelsius() -> Double?{
-        let data: UInt16 = spi_i.read(count: 1)[0]
+let themocoupleInputBit: UInt8 = 0b100
+
+public class MAX6675{
+    let spi: SPI
+    
+    
+    public init(spi:SPI){
+        self.spi = spi
+    }
+    
+    /// Reads a temperature from the thermocouple. if the input of the themocouple is open, nul is returned.
+    /// - Returns: Temperature in degree Celsius. if the input of the themocouple is open, nul is returned
+    public func readCelsius() -> Double?{
+        var buffer: [UInt8] = [0,0]
+        spi.read(into: &buffer)
         
-        if ((data & 0b100) != 0) {
+        if (buffer[1] & themocoupleInputBit) == themocoupleInputBit {
+            print("Fail: themocouple input is open")
             return nil
         }
-
-        return Double(data >> 3) * 0.25
+        
+        return toTemparture(buffer)
     }
-
-    /**
-        Reads a temperature in Kelvin.
-        @return temperature in degree Kelvin
-    */
-    func readKelvin() -> Double?{
-        if let celcius = readCelsius(){
-            return Temperature.toKelvins(celsius:celcius)
-        }
-        return nil
-    }
-
-    /**
-        Reads a temperature in Fahrenheit.
-        @return temperature in degree Fahrenheit
-    */
-
-    func readFahrenheit() -> Double?{
-        if let celcius = readCelsius(){
-            return Temperature.toFahrenheit(celsius:celcius)
-        }
-        return nil
+    
+    /// Checks if the themocouple input of pins T+ and T- is open.
+    /// - Returns: Is themocouple input open.
+    public func isThemocoupleInputOpen() -> Bool{
+        var buffer: [UInt8] = [0,0]
+        spi.read(into: &buffer)
+        
+        return (buffer[1] & themocoupleInputBit) == themocoupleInputBit
     }
     
 }
+
+
+extension MAX6675{
+    func toTemparture(_ data: [UInt8]) -> Double{
+        let uint16 = UInt16(data[0]) << 5 | UInt16(data[1]) >> 3
+        return Double(uint16) * 0.25
+    }
+}
+
 
